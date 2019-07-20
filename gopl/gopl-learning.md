@@ -309,5 +309,25 @@ Usage:
 
 - Question3：Windows系统会把回车和换行一起放入文本文件中？？？是指go在不同系统中的使用原生字符串面值不一致？
 
+```Go
+// intsToString is like fmt.Sprint(values) but adds commas.
+func intsToString(values []int) string {
+    var buf bytes.Buffer
+    buf.WriteByte('[')
+    for i, v := range values {
+        if i > 0 {
+            buf.WriteString(", ")
+        }
+        fmt.Fprintf(&buf, "%d", v)
+    }
+    buf.WriteByte(']')
+    return buf.String()
+}
+
+func main() {
+    fmt.Println(intsToString([]int{1, 2, 3})) // "[1, 2, 3]"
+}
+```
+
 
 
