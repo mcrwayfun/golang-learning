@@ -477,3 +477,7 @@ w.Spokes = 20
 ```
 
 需要注意的是Printf函数中%v参数包含的#副词，它表示用和Go语言类似的语法打印值。对于结构体类型来说，将包含每个成员的名字。
+
+#### 3-5 JSON
+
+JavaScript对象表示法（JSON）是一种用于发送和接收结构化信息的标准协议。Go语言对于这些标准格式的编码和解码都有良好的支持，由标准库中的encoding/json、encoding/xml、encoding/asn1等包提供支持
