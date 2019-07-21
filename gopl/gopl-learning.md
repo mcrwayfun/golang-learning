@@ -562,6 +562,74 @@ fmt.Println(f(3)) // "9"
 
 **但是函数值之间是不可比较的，也不能用函数值作为map的key。**
 
+#### 4-6 匿名函数
+
+拥有函数名的函数只能在包级语法块中被声明，通过函数字面量（function literal），我们可绕过这一限制，在任何表达式中表示一个函数值。函数字面量的语法和函数声明相似，区别在于func关键字后没有函数名。函数值字面量是一种表达式，它的值被成为匿名函数（anonymous function）。
+
+更为重要的是，通过这种方式定义的函数可以访问完整的词法环境（lexical environment），这意味着在函数中定义的内部函数可以引用该函数的变量，如下例所示：
+
+```go
+// squares返回一个匿名函数。
+// 该匿名函数每次被调用时都会返回下一个数的平方。
+func squares() func() int {
+    var x int
+    return func() int {
+        x++
+        return x * x
+    }
+}
+func main() {
+    f := squares()
+    fmt.Println(f()) // "1"
+    fmt.Println(f()) // "4"
+    fmt.Println(f()) // "9"
+    fmt.Println(f()) // "16"
+}
+```
+
+squares的例子证明，函数值不仅仅是一串代码，还记录了状态。在squares中定义的匿名内部函数可以访问和更新squares中的局部变量，这意味着匿名函数和squares中，存在变量引用。这就是函数值属于引用类型和函数值不可比较的原因。Go使用闭包（closures）技术实现函数值，Go程序员也把函数值叫做闭包。
+
+通过这个例子，我们看到变量的生命周期不由它的作用域决定：squares返回后，变量x仍然隐式的存在于f中。
+
+##### 4-6-1 捕获迭代变量
+
+本节，将介绍Go词法作用域的一个陷阱。请务必仔细的阅读，弄清楚发生问题的原因。即使是经验丰富的程序员也会在这个问题上犯错误。
+
+考虑这个样一个问题：你被要求首先创建一些目录，再将目录删除。在下面的例子中我们用函数值来完成删除操作。下面的示例代码需要引入os包。为了使代码简单，我们忽略了所有的异常处理。
+
+```go
+var rmdirs []func()
+for _, d := range tempDirs() {
+    dir := d // NOTE: necessary!
+    os.MkdirAll(dir, 0755) // creates parent directories too
+    rmdirs = append(rmdirs, func() {
+        os.RemoveAll(dir)
+    })
+}
+// ...do some work…
+for _, rmdir := range rmdirs {
+    rmdir() // clean up
+}
+```
+
+你可能会感到困惑，为什么要在循环体中用循环变量d赋值一个新的局部变量，而不是像下面的代码一样直接使用循环变量dir。需要注意，下面的代码是错误的。
+
+```go
+var rmdirs []func()
+for _, dir := range tempDirs() {
+    os.MkdirAll(dir, 0755)
+    rmdirs = append(rmdirs, func() {
+        os.RemoveAll(dir) // NOTE: incorrect!
+    })
+}
+```
+
+问题的原因在于循环变量的作用域。在上面的程序中，for循环语句引入了新的词法块，循环变量dir在这个词法块中被声明。在该循环中生成的所有函数值都共享相同的循环变量。需要注意，函数值中记录的是循环变量的内存地址，而不是循环变量某一时刻的值。以dir为例，后续的迭代会不断更新dir的值，当删除操作执行时，for循环已完成，dir中存储的值等于最后一次迭代的值。这意味着，每次对os.RemoveAll的调用删除的都是相同的目录。
+
+通常，为了解决这个问题，我们会引入一个与循环变量同名的局部变量，作为循环变量的副本。比如下面的变量dir，虽然这看起来很奇怪，但却很有用。
+
+- Question1：**在循环中使用匿名函数，会在循环结束后才调用？？这不是go或defer本身导致的，而是因为它们都会等待循环结束后，再执行函数值。**？？
+
 
 
 
