@@ -549,5 +549,20 @@ func countWordsAndImages(n *html.Node) (words, images int) { /* ... */ }
 4. 我们只需要输出错误信息就足够了，不需要中断程序的运行。我们可以通过log包提供函数。
 5. 我们可以直接忽略掉错误。
 
+#### 4-5 函数值
+
+在Go中，函数被看作第一类值（first-class values）：函数像其他值一样，拥有类型，可以被赋值给其他变量，传递给函数，从函数返回。
+
+```go
+func square(n int) int { return n * n }
+// 函数值
+f := square
+fmt.Println(f(3)) // "9"
+```
+
+**但是函数值之间是不可比较的，也不能用函数值作为map的key。**
+
+
+
 
 
