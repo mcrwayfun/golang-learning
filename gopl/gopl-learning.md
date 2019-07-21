@@ -443,5 +443,37 @@ if age, ok := ages["bob"]; !ok { /* ... */ }
 
 有时候我们需要一个map或set的key是slice类型，但是map的key必须是可比较的类型，但是slice并不满足这个条件。不过，我们可以通过两个步骤绕过这个限制。第一步，定义一个辅助函数k，将slice转为map对应的string类型的key，确保只有x和y相等时k(x) == k(y)才成立。然后创建一个key为string类型的map，在每次对map操作时先用k辅助函数将slice转化为string类型。
 
-Map的value类型也可以是一个聚合类型
+Map的value类型也可以是一个聚合类型。
 
+#### 3-4 结构体
+
+结构体是一种聚合的数据类型，是由零个或多个任意类型的值聚合成的实体。每个值称为结构体的成员。
+
+结构体成员的输入顺序也有重要的意义。
+
+- Question1：结构体成员的顺序会决定它是不同的结构体？如何判断是不是同一个结构体？
+
+一个命名为S的结构体类型将不能再包含S类型的成员：因为一个聚合的值不能包含它自身。（该限制同样适应于数组。）但是S类型的结构体可以包含`*S`指针类型的成员，这可以让我们创建递归的数据结构，比如链表和树结构等。
+
+Go语言有一个特性让我们只声明一个成员对应的数据类型而不指名成员的名字；这类成员就叫匿名成员。匿名成员的数据类型必须是命名的类型或指向一个命名的类型的指针。下面的代码中，Circle和Wheel各自都有一个匿名成员。我们可以说Point类型被嵌入到了Circle结构体，同时Circle类型被嵌入到了Wheel结构体
+
+```go
+type Circle struct {
+    Point
+    Radius int
+}
+
+type Wheel struct {
+    Circle
+    Spokes int
+}
+
+// 得意于匿名嵌入的特性，我们可以直接访问叶子属性而不需要给出完整的路径：
+var w Wheel
+w.X = 8            // equivalent to w.Circle.Point.X = 8
+w.Y = 8            // equivalent to w.Circle.Point.Y = 8
+w.Radius = 5       // equivalent to w.Circle.Radius = 5
+w.Spokes = 20
+```
+
+需要注意的是Printf函数中%v参数包含的#副词，它表示用和Go语言类似的语法打印值。对于结构体类型来说，将包含每个成员的名字。
